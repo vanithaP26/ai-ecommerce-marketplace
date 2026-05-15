@@ -11,6 +11,7 @@ import ProductDetails from "./pages/ProductDetails";
 import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import Chatbot from "./components/Chatbot";
+import SellerDashboard from "./pages/SellerDashboard";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/seller" element={<SellerDashboard />} />
       </Routes>
       <Chatbot />
     </BrowserRouter>

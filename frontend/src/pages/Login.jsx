@@ -35,11 +35,16 @@ function Login() {
 
       alert("Login Successful");
 
-      window.location.href = "/";
-
-      alert("Login Successful");
+      if (res.data.user.role === "seller") {
+        window.location.href = "/seller";
+      } else {
+        window.location.href = "/";
+      }
     } catch (error) {
-      alert(error.response.data.message);
+      alert(
+        error.response?.data?.message ||
+          "Login Failed"
+      );
     }
   };
 
@@ -57,16 +62,20 @@ function Login() {
           type="email"
           name="email"
           placeholder="Email"
+          value={formData.email}
           onChange={handleChange}
           className="w-full border p-3 rounded-lg mb-4"
+          required
         />
 
         <input
           type="password"
           name="password"
           placeholder="Password"
+          value={formData.password}
           onChange={handleChange}
           className="w-full border p-3 rounded-lg mb-6"
+          required
         />
 
         <button className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800">

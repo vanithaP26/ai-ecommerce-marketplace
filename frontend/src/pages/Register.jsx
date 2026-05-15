@@ -6,6 +6,7 @@ function Register() {
     name: "",
     email: "",
     password: "",
+    role: "customer",
   });
 
   const handleChange = (e) => {
@@ -24,9 +25,18 @@ function Register() {
         formData
       );
 
-      alert(res.data.message);
+      alert("Registration Successful");
+
+      console.log(res.data);
+
+      window.location.href = "/login";
     } catch (error) {
-      alert(error.response.data.message);
+      console.log(error);
+
+      alert(
+        error.response?.data?.message ||
+          "Registration Failed"
+      );
     }
   };
 
@@ -44,27 +54,51 @@ function Register() {
           type="text"
           name="name"
           placeholder="Name"
+          value={formData.name}
           onChange={handleChange}
           className="w-full border p-3 rounded-lg mb-4"
+          required
         />
 
         <input
           type="email"
           name="email"
           placeholder="Email"
+          value={formData.email}
           onChange={handleChange}
           className="w-full border p-3 rounded-lg mb-4"
+          required
         />
 
         <input
           type="password"
           name="password"
           placeholder="Password"
+          value={formData.password}
           onChange={handleChange}
-          className="w-full border p-3 rounded-lg mb-6"
+          className="w-full border p-3 rounded-lg mb-4"
+          required
         />
 
-        <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700">
+        <select
+          name="role"
+          value={formData.role}
+          onChange={handleChange}
+          className="w-full border p-4 rounded-lg mb-6"
+        >
+          <option value="customer">
+            Customer
+          </option>
+
+          <option value="seller">
+            Seller
+          </option>
+        </select>
+
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
+        >
           Register
         </button>
       </form>

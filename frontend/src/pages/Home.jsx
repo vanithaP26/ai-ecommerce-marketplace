@@ -35,6 +35,30 @@ function Home() {
     <div>
       <Hero />
 
+      <section className="px-10 py-16 bg-white">
+        <h2 className="text-4xl font-bold text-center mb-12">
+          Shop By Categories
+        </h2>
+
+        <div className="grid md:grid-cols-4 gap-8">
+          <div className="bg-black text-white p-10 rounded-2xl text-center text-2xl font-bold hover:scale-105 transition">
+            Electronics
+        </div>
+
+        <div className="bg-blue-500 text-white p-10 rounded-2xl text-center text-2xl font-bold hover:scale-105 transition">
+          Fashion
+        </div>
+
+        <div className="bg-green-500 text-white p-10 rounded-2xl text-center text-2xl font-bold hover:scale-105 transition">
+          Mobiles
+        </div>
+
+        <div className="bg-red-500 text-white p-10 rounded-2xl text-center text-2xl font-bold hover:scale-105 transition">
+          Accessories
+        </div>
+      </div>
+    </section>
+
       <section className="px-10 py-16 bg-gray-50">
         <h2 className="text-4xl font-bold text-center mb-12">
           Featured Products
