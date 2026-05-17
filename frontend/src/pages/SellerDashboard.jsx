@@ -33,9 +33,12 @@ function SellerDashboard() {
       title: "",
       description: "",
       price: "",
+      discountPrice: "",
+      brand: "",
       image: "",
       category: "",
       stock: "",
+      featured: false,
     });
 
   const fetchProducts =
@@ -58,31 +61,46 @@ function SellerDashboard() {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+
+      [e.target.name]:
+        e.target.value,
     });
   };
 
   const uploadImage = async (e) => {
     const file = e.target.files[0];
 
-    const data = new FormData();
+    const data =
+      new FormData();
 
-    data.append("image", file);
+    data.append(
+      "image",
+      file
+    );
 
     try {
-      const res = await API.post(
-        "/upload",
-        data
-      );
+      const res =
+        await API.post(
+          "/upload",
+          data
+        );
 
       setFormData({
         ...formData,
-        image: res.data.imageUrl,
+
+        image:
+          res.data.imageUrl,
       });
 
-      alert("Image Uploaded");
+      alert(
+        "Image Uploaded"
+      );
     } catch (error) {
-      alert("Image Upload Failed");
+      console.log(error);
+
+      alert(
+        "Image Upload Failed"
+      );
     }
   };
 
@@ -90,67 +108,80 @@ function SellerDashboard() {
     e.preventDefault();
 
     try {
-      await API.post("/products", {
-        ...formData,
+      await API.post(
+        "/products",
+        {
+          ...formData,
 
-        seller: user._id,
-      });
+          seller: user._id,
+        }
+      );
 
-      alert("Product Added");
+      alert(
+        "Product Added"
+      );
 
       setFormData({
         title: "",
         description: "",
         price: "",
+        discountPrice: "",
+        brand: "",
         image: "",
         category: "",
         stock: "",
+        featured: false,
       });
 
       fetchProducts();
     } catch (error) {
-      alert("Failed to add product");
-    }
-  };
-
-  const deleteProduct = async (
-    id
-  ) => {
-    try {
-      await API.delete(
-        `/products/${id}`
-      );
-
-      fetchProducts();
-    } catch (error) {
       console.log(error);
+
+      alert(
+        "Failed to add product"
+      );
     }
   };
+
+  const deleteProduct =
+    async (id) => {
+      try {
+        await API.delete(
+          `/products/${id}`
+        );
+
+        fetchProducts();
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
   const totalProducts =
     products.length;
 
-  const totalStock = products.reduce(
-    (acc, item) =>
-      acc + Number(item.stock),
-    0
-  );
-
-  const totalValue = products.reduce(
-    (acc, item) =>
-      acc +
-      Number(item.price) *
+  const totalStock =
+    products.reduce(
+      (acc, item) =>
+        acc +
         Number(item.stock),
-    0
-  );
+      0
+    );
+
+  const totalValue =
+    products.reduce(
+      (acc, item) =>
+        acc +
+        Number(item.price) *
+          Number(item.stock),
+      0
+    );
 
   return (
     <div className="flex bg-gray-100 min-h-screen">
+
       <Sidebar role="seller" />
 
       <div className="flex-1 p-8">
-
-        {/* TOPBAR */}
 
         <Topbar title="Seller Dashboard" />
 
@@ -159,6 +190,7 @@ function SellerDashboard() {
         <div className="grid md:grid-cols-4 gap-6 mb-12">
 
           <div className="bg-white p-6 rounded-2xl shadow">
+
             <div className="flex items-center justify-between">
 
               <div>
@@ -172,10 +204,13 @@ function SellerDashboard() {
               </div>
 
               <Package size={40} />
+
             </div>
+
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow">
+
             <div className="flex items-center justify-between">
 
               <div>
@@ -189,10 +224,13 @@ function SellerDashboard() {
               </div>
 
               <ShoppingCart size={40} />
+
             </div>
+
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow">
+
             <div className="flex items-center justify-between">
 
               <div>
@@ -206,10 +244,13 @@ function SellerDashboard() {
               </div>
 
               <IndianRupee size={40} />
+
             </div>
+
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow">
+
             <div className="flex items-center justify-between">
 
               <div>
@@ -223,7 +264,9 @@ function SellerDashboard() {
               </div>
 
               <BarChart3 size={40} />
+
             </div>
+
           </div>
 
         </div>
@@ -246,7 +289,9 @@ function SellerDashboard() {
               name="title"
               placeholder="Product Title"
               value={formData.title}
-              onChange={handleChange}
+              onChange={
+                handleChange
+              }
               className="border p-4 rounded-xl"
               required
             />
@@ -256,17 +301,47 @@ function SellerDashboard() {
               name="price"
               placeholder="Price"
               value={formData.price}
-              onChange={handleChange}
+              onChange={
+                handleChange
+              }
               className="border p-4 rounded-xl"
               required
+            />
+
+            <input
+              type="number"
+              name="discountPrice"
+              placeholder="Discount Price"
+              value={
+                formData.discountPrice
+              }
+              onChange={
+                handleChange
+              }
+              className="border p-4 rounded-xl"
+            />
+
+            <input
+              type="text"
+              name="brand"
+              placeholder="Brand"
+              value={formData.brand}
+              onChange={
+                handleChange
+              }
+              className="border p-4 rounded-xl"
             />
 
             <input
               type="text"
               name="category"
               placeholder="Category"
-              value={formData.category}
-              onChange={handleChange}
+              value={
+                formData.category
+              }
+              onChange={
+                handleChange
+              }
               className="border p-4 rounded-xl"
               required
             />
@@ -276,33 +351,86 @@ function SellerDashboard() {
               name="stock"
               placeholder="Stock"
               value={formData.stock}
-              onChange={handleChange}
+              onChange={
+                handleChange
+              }
               className="border p-4 rounded-xl"
               required
             />
 
+            <div className="flex items-center gap-3">
+
+              <input
+                type="checkbox"
+                name="featured"
+                checked={
+                  formData.featured
+                }
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+
+                    featured:
+                      e.target
+                        .checked,
+                  })
+                }
+              />
+
+              <label>
+                Featured Product
+              </label>
+
+            </div>
+
             <input
               type="file"
-              onChange={uploadImage}
+              onChange={
+                uploadImage
+              }
               className="border p-4 rounded-xl"
-              required
             />
+
+            {/* IMAGE PREVIEW */}
+
+            {formData.image && (
+
+              <div>
+
+                <img
+                  src={
+                    formData.image
+                  }
+                  alt="preview"
+                  className="w-28 h-28 rounded-xl object-cover border"
+                />
+
+              </div>
+
+            )}
 
             <textarea
               name="description"
               placeholder="Description"
-              value={formData.description}
-              onChange={handleChange}
+              value={
+                formData.description
+              }
+              onChange={
+                handleChange
+              }
               className="border p-4 rounded-xl md:col-span-2"
               rows="5"
               required
             />
 
             <button className="bg-black text-white py-4 rounded-xl text-lg font-semibold md:col-span-2 hover:bg-gray-800 transition">
+
               Add Product
+
             </button>
 
           </form>
+
         </div>
 
         {/* CHART */}
@@ -315,10 +443,13 @@ function SellerDashboard() {
 
         <Table
           products={products}
-          deleteProduct={deleteProduct}
+          deleteProduct={
+            deleteProduct
+          }
         />
 
       </div>
+
     </div>
   );
 }

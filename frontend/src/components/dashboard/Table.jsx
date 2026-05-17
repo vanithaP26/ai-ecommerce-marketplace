@@ -13,9 +13,10 @@ function Table({
 
       {/* HEADER */}
 
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
 
         <div>
+
           <h2 className="text-3xl font-bold">
             Product Inventory
           </h2>
@@ -23,6 +24,7 @@ function Table({
           <p className="text-gray-500 mt-1">
             Manage your products
           </p>
+
         </div>
 
         {/* SEARCH */}
@@ -41,15 +43,17 @@ function Table({
           />
 
         </div>
+
       </div>
 
       {/* TABLE */}
 
       <div className="overflow-x-auto">
 
-        <table className="w-full">
+        <table className="w-full min-w-[950px]">
 
           <thead>
+
             <tr className="border-b text-gray-500">
 
               <th className="text-left py-4">
@@ -77,6 +81,7 @@ function Table({
               </th>
 
             </tr>
+
           </thead>
 
           <tbody>
@@ -92,23 +97,51 @@ function Table({
 
                 <td className="py-5">
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-5 min-w-[320px]">
+
+                    {/* IMAGE */}
 
                     <img
-                      src={product.image}
+                      src={
+                        product.image ||
+                        "https://via.placeholder.com/150"
+                      }
                       alt={product.title}
-                      className="w-16 h-16 rounded-xl object-cover"
+                      className="w-24 h-24 rounded-2xl object-cover border bg-gray-100"
                     />
+
+                    {/* INFO */}
 
                     <div>
 
-                      <h3 className="font-semibold text-lg">
+                      <h3 className="font-bold text-lg">
                         {product.title}
                       </h3>
 
-                      <p className="text-gray-500 text-sm">
-                        {product.description}
+                      <p className="text-gray-500 text-sm mt-1 max-w-[220px] truncate">
+                        {
+                          product.description
+                        }
                       </p>
+
+                      {/* BRAND */}
+
+                      {product.brand && (
+
+                        <p className="text-sm text-gray-400 mt-2">
+
+                          Brand:
+                          {" "}
+
+                          <span className="font-medium">
+                            {
+                              product.brand
+                            }
+                          </span>
+
+                        </p>
+
+                      )}
 
                     </div>
 
@@ -118,19 +151,42 @@ function Table({
 
                 {/* CATEGORY */}
 
-                <td>
+                <td className="font-medium">
                   {product.category}
                 </td>
 
                 {/* PRICE */}
 
-                <td className="font-semibold">
-                  ₹{product.price}
+                <td>
+
+                  <div className="flex flex-col">
+
+                    <span className="font-bold text-lg">
+                      ₹{product.price}
+                    </span>
+
+                    {product.discountPrice >
+                      0 && (
+
+                      <span className="text-green-600 text-sm">
+
+                        Sale:
+                        ₹
+                        {
+                          product.discountPrice
+                        }
+
+                      </span>
+
+                    )}
+
+                  </div>
+
                 </td>
 
                 {/* STOCK */}
 
-                <td>
+                <td className="font-medium">
                   {product.stock}
                 </td>
 
@@ -138,16 +194,21 @@ function Table({
 
                 <td>
 
-                  {product.stock > 0 ? (
+                  {product.stock >
+                  0 ? (
 
-                    <span className="bg-green-100 text-green-600 px-4 py-2 rounded-full text-sm">
+                    <span className="bg-green-100 text-green-600 px-4 py-2 rounded-full text-sm font-medium">
+
                       In Stock
+
                     </span>
 
                   ) : (
 
-                    <span className="bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm">
+                    <span className="bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-medium">
+
                       Out of Stock
+
                     </span>
 
                   )}
@@ -167,7 +228,7 @@ function Table({
                         (window.location.href =
                           `/seller/edit/${product._id}`)
                       }
-                      className="bg-blue-100 p-3 rounded-lg hover:bg-blue-200 transition"
+                      className="bg-blue-100 p-3 rounded-xl hover:bg-blue-200 transition"
                     >
 
                       <Pencil
@@ -185,7 +246,7 @@ function Table({
                           product._id
                         )
                       }
-                      className="bg-red-100 p-3 rounded-lg hover:bg-red-200 transition"
+                      className="bg-red-100 p-3 rounded-xl hover:bg-red-200 transition"
                     >
 
                       <Trash2
