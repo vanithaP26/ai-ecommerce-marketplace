@@ -12,6 +12,11 @@ import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import Chatbot from "./components/Chatbot";
 import SellerDashboard from "./pages/SellerDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminCategories from "./pages/AdminCategories";
+import AdminProducts from "./pages/AdminProducts";
+import AdminOrders from "./pages/AdminOrders";
+import EditProduct from "./pages/EditProduct";
 
 function App() {
   return (
@@ -26,8 +31,12 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/checkout" element={<Checkout />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/categories" element={<AdminCategories />} />
+        <Route path="/admin/products" element={<AdminProducts />} />
+        <Route path="/admin/orders" element={<AdminOrders />} />
         <Route path="/seller" element={<SellerDashboard />} />
+        <Route path="/seller/edit/:id" element={<EditProduct />} />
       </Routes>
       <Chatbot />
     </BrowserRouter>

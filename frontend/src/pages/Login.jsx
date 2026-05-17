@@ -35,11 +35,16 @@ function Login() {
 
       alert("Login Successful");
 
-      if (res.data.user.role === "seller") {
+      if (res.data.user.role === "admin") {
+        window.location.href = "/admin";
+      } else if (
+        res.data.user.role === "seller"
+      ) {
         window.location.href = "/seller";
       } else {
         window.location.href = "/";
       }
+      
     } catch (error) {
       alert(
         error.response?.data?.message ||

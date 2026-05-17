@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema(
 
     description: {
       type: String,
+      required: true,
     },
 
     price: {
@@ -18,15 +19,22 @@ const productSchema = new mongoose.Schema(
 
     image: {
       type: String,
+      required: true,
     },
 
     category: {
       type: String,
+      required: true,
     },
 
     stock: {
       type: Number,
-      default: 0,
+      required: true,
+    },
+
+    seller: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   {
