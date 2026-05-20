@@ -1,0 +1,74 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Manage Customers | Admin Panel{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="dashboard-sidebar shadow-sm">
+        <h5 class="fw-bold mb-4 px-3 text-muted uppercase small">Admin Panel</h5>
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link">
+            <i class="fa-solid fa-chart-pie me-2"></i> Overview
+        </a>
+        <a href="{{ url_for('admin.users') }}" class="sidebar-link active">
+            <i class="fa-solid fa-users me-2"></i> Customers
+        </a>
+        <a href="{{ url_for('admin.vendors') }}" class="sidebar-link">
+            <i class="fa-solid fa-store me-2"></i> Vendors
+        </a>
+        <a href="{{ url_for('user.profile') }}" class="sidebar-link">
+            <i class="fa-regular fa-user-circle me-2"></i> Account Details
+        </a>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="dashboard-content">
+        <div class="mb-5">
+            <h2 class="fw-bold mb-1" style="font-family: var(--font-heading);">Customer Directory</h2>
+            <p class="text-secondary mb-0">Monitor registered user profiles and toggle operational status values</p>
+        </div>
+        
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr class="text-muted border-bottom">
+                            <th>User ID</th>
+                            <th>Username</th>
+                            <th>Email Address</th>
+                            <th>Status</th>
+                            <th>Registration Date</th>
+                            <th class="text-end" style="width: 180px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in customers %}
+                        <tr>
+                            <td class="fw-bold">#USR-{{ "%04d"|format(user.id) }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.status == 'active' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">Suspended</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.created_at }}</td>
+                            <td class="text-end">
+                                <form action="{{ url_for('admin.user_toggle_status', user_id=user.id) }}" method="POST">
+                                    {% if user.status == 'active' %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100 py-1" onclick="return confirm('Suspend this user account?')">Suspend User</button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success w-100 py-1">Activate User</button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'layouts/base.html' %}
+{% block title %}{{ action }} Product | Nexus Market{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="dashboard-sidebar shadow-sm">
+        <h5 class="fw-bold mb-4 px-3 text-muted uppercase small">Vendor Panel</h5>
+        <a href="{{ url_for('vendor.dashboard') }}" class="sidebar-link">
+            <i class="fa-solid fa-chart-line me-2"></i> Overview
+        </a>
+        <a href="{{ url_for('vendor.products') }}" class="sidebar-link active">
+            <i class="fa-solid fa-boxes-stacked me-2"></i> My Products
+        </a>
+        <a href="{{ url_for('vendor.orders') }}" class="sidebar-link">
+            <i class="fa-solid fa-receipt me-2"></i> Client Orders
+        </a>
+        <a href="{{ url_for('vendor.analytics') }}" class="sidebar-link">
+            <i class="fa-solid fa-sparkles me-2"></i> AI Analytics
+        </a>
+        <a href="{{ url_for('user.profile') }}" class="sidebar-link">
+            <i class="fa-regular fa-user-circle me-2"></i> Account Details
+        </a>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="dashboard-content">
+        <div class="mb-5">
+            <h2 class="fw-bold mb-1" style="font-family: var(--font-heading);">{{ action }} Product</h2>
+            <p class="text-secondary mb-0">Fill in details to release or update item listings</p>
+        </div>
+        
+        <div class="card border-0 shadow-sm rounded-4 p-5 bg-white" style="max-width: 800px;">
+            <form action="{% if action == 'Add' %}{{ url_for('vendor.product_add') }}{% else %}{{ url_for('vendor.product_edit', product_id=product.id) }}{% endif %}" method="POST" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label for="name" class="form-label fw-semibold">Product Title *</label>
+                        <input type="text" class="form-control bg-light border-0 py-2" id="name" name="name" value="{{ product.name if product else '' }}" required placeholder="e.g. Smart Watch Model 9">
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="category_id" class="form-label fw-semibold">Category *</label>
+                        <select class="form-select bg-light border-0 py-2" id="category_id" name="category_id" required>
+                            <option value="">Select Category</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if product and product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="price" class="form-label fw-semibold">Price ($) *</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0 py-2" id="price" name="price" value="{{ product.price if product else '' }}" required placeholder="0.00">
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="stock" class="form-label fw-semibold">Available Stock *</label>
+                        <input type="number" class="form-control bg-light border-0 py-2" id="stock" name="stock" value="{{ product.stock if product else '' }}" required placeholder="e.g. 50">
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label fw-semibold">Product Description</label>
+                    <textarea class="form-control bg-light border-0" id="description" name="description" rows="5" placeholder="Provide product features, sizing, and details...">{{ product.description if product else '' }}</textarea>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="product_image" class="form-label fw-semibold">Product Display Image</label>
+                    <input class="form-control bg-light border-0 py-2" type="file" id="product_image" name="product_image">
+                    <div class="form-text">Allowed formats: JPG, PNG, GIF. Max file size: 5MB.</div>
+                    {% if product and product.image_url %}
+                        <div class="mt-2">
+                            <span class="small text-muted d-block mb-1">Current Image:</span>
+                            <img src="{{ url_for('static', filename=product.image_url) if '/' in product.image_url else url_for('static', filename='images/' ~ product.image_url) }}" class="rounded-3 border" style="width: 100px; height: 100px; object-fit: cover;" onerror="this.src='https://placehold.co/100x100?text=Product'">
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if action == 'Edit' %}
+                <div class="mb-4">
+                    <label for="status" class="form-label fw-semibold">Status</label>
+                    <select class="form-select bg-light border-0 py-2" id="status" name="status">
+                        <option value="active" {% if product.status == 'active' %}selected{% endif %}>Active (Visible to public)</option>
+                        <option value="inactive" {% if product.status == 'inactive' %}selected{% endif %}>Inactive (Hidden from public)</option>
+                    </select>
+                </div>
+                {% endif %}
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-premium px-4 py-2">{{ action }} Product</button>
+                    <a href="{{ url_for('vendor.products') }}" class="btn btn-premium-outline px-4 py-2">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

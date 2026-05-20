@@ -1,0 +1,165 @@
+{% extends 'layouts/base.html' %}
+{% block title %}AI Analytics & Forecasts | Nexus Market{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="dashboard-sidebar shadow-sm">
+        <h5 class="fw-bold mb-4 px-3 text-muted uppercase small">Vendor Panel</h5>
+        <a href="{{ url_for('vendor.dashboard') }}" class="sidebar-link">
+            <i class="fa-solid fa-chart-line me-2"></i> Overview
+        </a>
+        <a href="{{ url_for('vendor.products') }}" class="sidebar-link">
+            <i class="fa-solid fa-boxes-stacked me-2"></i> My Products
+        </a>
+        <a href="{{ url_for('vendor.orders') }}" class="sidebar-link">
+            <i class="fa-solid fa-receipt me-2"></i> Client Orders
+        </a>
+        <a href="{{ url_for('vendor.analytics') }}" class="sidebar-link active">
+            <i class="fa-solid fa-sparkles me-2"></i> AI Analytics
+        </a>
+        <a href="{{ url_for('user.profile') }}" class="sidebar-link">
+            <i class="fa-regular fa-user-circle me-2"></i> Account Details
+        </a>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h2 class="fw-bold mb-1" style="font-family: var(--font-heading);"><i class="fa-solid fa-wand-magic-sparkles text-indigo-600 me-1"></i> AI Sales & Inventory Engine</h2>
+                <p class="text-secondary mb-0">Platform telemetry analyzing daily velocities and predicting market trends</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <!-- Left Side: Inventory Insights -->
+            <div class="col-lg-6">
+                <!-- Shortage & Restock Suggestions -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="fa-solid fa-warehouse text-indigo-600 fs-4 me-3"></i>
+                        <h5 class="fw-bold mb-0">Inventory Shortage & Restock Predictions</h5>
+                    </div>
+                    
+                    {% if not suggestions %}
+                        <div class="alert alert-success border-0 rounded-3 mb-0" role="alert">
+                            <i class="fas fa-check-circle me-2"></i> All product inventory levels are healthy relative to current sales velocity!
+                        </div>
+                    {% else %}
+                        <p class="text-secondary small">Based on daily sales velocity, the following items require attention. Restock recommendations include a 5-item safety stock buffer:</p>
+                        <div class="list-group list-group-flush">
+                            {% for sugg in suggestions %}
+                            <div class="list-group-item px-0 border-top py-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="fw-bold text-dark mb-0">{{ sugg.name }}</h6>
+                                    <span class="badge bg-danger rounded-pill">Restock Suggestion</span>
+                                </div>
+                                <div class="row g-2 text-secondary small">
+                                    <div class="col-6">Current Stock: <span class="fw-semibold text-dark">{{ sugg.current_stock }} units</span></div>
+                                    <div class="col-6">Daily Sales Velocity: <span class="fw-semibold text-dark">{{ sugg.daily_sales_velocity }} sold/day</span></div>
+                                    <div class="col-12 mt-2">
+                                        <div class="p-2 bg-light rounded-3 text-indigo-800 border-start border-indigo-600 border-3 fw-medium">
+                                            <i class="fas fa-magic me-1"></i> Suggested restock quantity: <span class="fw-bold fs-6">{{ sugg.suggested_restock }} units</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Dead Inventory detector -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="fa-solid fa-circle-exclamation text-danger fs-4 me-3"></i>
+                        <h5 class="fw-bold mb-0">Dead Inventory Alerts</h5>
+                    </div>
+                    
+                    {% if not dead_inventory %}
+                        <div class="alert alert-success border-0 rounded-3 mb-0" role="alert">
+                            <i class="fas fa-check-circle me-2"></i> No inactive or non-selling inventory items flagged. Good velocity!
+                        </div>
+                    {% else %}
+                        <p class="text-secondary small">The following active products have had <span class="fw-bold">zero purchases in the last 30 days</span>. Consider adjusting details, prices, or promotion settings:</p>
+                        <div class="list-group list-group-flush">
+                            {% for dead in dead_inventory %}
+                            <div class="list-group-item px-0 border-top py-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">{{ dead.name }}</h6>
+                                    <span class="small text-muted">Stock: {{ dead.stock }} units | Price: ${{ dead.price }}</span>
+                                </div>
+                                <span class="badge bg-warning text-dark rounded-pill px-3">0 Sales (30 Days)</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Right Side: Sales Trends & Top Sellers -->
+            <div class="col-lg-6">
+                <!-- Sales Forecast Analytics -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="fa-solid fa-chart-line text-indigo-600 fs-4 me-3"></i>
+                        <h5 class="fw-bold mb-0">Sales Trend Prediction</h5>
+                    </div>
+                    
+                    <div class="p-3 bg-light rounded-4 mb-4">
+                        <div class="row text-center g-3">
+                            <div class="col-6 border-end">
+                                <span class="small text-muted d-block uppercase fw-bold mb-1">Growth Slope</span>
+                                <span class="fs-5 fw-bold text-indigo-600">
+                                    {% if forecast.slope_revenue > 0.5 %}
+                                        <i class="fas fa-arrow-up text-success me-1"></i> Positive (+{{ "%.2f"|format(forecast.slope_revenue) }})
+                                    {% elif forecast.slope_revenue < -0.5 %}
+                                        <i class="fas fa-arrow-down text-danger me-1"></i> Negative ({{ "%.2f"|format(forecast.slope_revenue) }})
+                                    {% else %}
+                                        <i class="fas fa-arrows-left-right text-muted me-1"></i> Stable ({{ "%.2f"|format(forecast.slope_revenue) }})
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="col-6">
+                                <span class="small text-muted d-block uppercase fw-bold mb-1">Projected Sales</span>
+                                <span class="fs-5 fw-bold text-dark">${{ "%.2f"|format(forecast.predicted_revenue_next_period) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h6 class="fw-bold text-dark mb-2">Linear Trend Analysis</h6>
+                    <p class="text-secondary small mb-0">The projection uses a linear regression (ordinary least squares) formula calculated dynamically against your historical daily order logs. Sales are projected to hit <span class="fw-bold text-dark">{{ forecast.predicted_volume_next_period }} units</span> over the next 30 days, totaling an estimated <span class="fw-bold text-indigo-600">${{ "%.2f"|format(forecast.predicted_revenue_next_period) }}</span> in store revenues.</p>
+                </div>
+                
+                <!-- Top Sellers -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="fa-solid fa-award text-warning fs-4 me-3"></i>
+                        <h5 class="fw-bold mb-0">Top Performing Products</h5>
+                    </div>
+                    
+                    {% if not top_selling %}
+                        <p class="text-secondary mb-0">No sales history logged to compute bestsellers.</p>
+                    {% else %}
+                        <div class="list-group list-group-flush">
+                            {% for top in top_selling %}
+                            <div class="list-group-item px-0 border-top py-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">{{ top.name }}</h6>
+                                    <span class="small text-muted">Stock: {{ top.stock }} units | Price: ${{ top.price }}</span>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fw-bold text-indigo-600 d-block">${{ "%.2f"|format(top.sales_revenue) }}</span>
+                                    <span class="small text-muted">({{ top.units_sold }} units sold)</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

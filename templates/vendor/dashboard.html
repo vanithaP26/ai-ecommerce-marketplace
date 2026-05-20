@@ -1,0 +1,147 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Vendor Dashboard | Nexus Market{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="dashboard-sidebar shadow-sm">
+        <h5 class="fw-bold mb-4 px-3 text-muted uppercase small">Vendor Panel</h5>
+        <a href="{{ url_for('vendor.dashboard') }}" class="sidebar-link active">
+            <i class="fa-solid fa-chart-line me-2"></i> Overview
+        </a>
+        <a href="{{ url_for('vendor.products') }}" class="sidebar-link">
+            <i class="fa-solid fa-boxes-stacked me-2"></i> My Products
+        </a>
+        <a href="{{ url_for('vendor.orders') }}" class="sidebar-link">
+            <i class="fa-solid fa-receipt me-2"></i> Client Orders
+        </a>
+        <a href="{{ url_for('vendor.analytics') }}" class="sidebar-link">
+            <i class="fa-solid fa-sparkles me-2"></i> AI Analytics
+        </a>
+        <a href="{{ url_for('user.profile') }}" class="sidebar-link">
+            <i class="fa-regular fa-user-circle me-2"></i> Account Details
+        </a>
+    </div>
+    
+    <!-- Main Dashboard Grid -->
+    <div class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h2 class="fw-bold mb-1" style="font-family: var(--font-heading);">Dashboard Summary</h2>
+                <p class="text-secondary mb-0">Overview of your store's sales and forecasts</p>
+            </div>
+            <a href="{{ url_for('vendor.product_add') }}" class="btn btn-premium"><i class="fas fa-plus me-2"></i> Add Product</a>
+        </div>
+        
+        <!-- Metrics -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="stat-widget">
+                    <div>
+                        <div class="stat-label">Store Earnings</div>
+                        <div class="stat-val text-indigo-600">${{ "%.2f"|format(stats.total_earnings) }}</div>
+                    </div>
+                    <i class="fa-solid fa-dollar-sign text-indigo-200 fs-2"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-widget">
+                    <div>
+                        <div class="stat-label">Items Sold</div>
+                        <div class="stat-val">{{ stats.items_sold }}</div>
+                    </div>
+                    <i class="fa-solid fa-dolly text-indigo-200 fs-2"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-widget">
+                    <div>
+                        <div class="stat-label">Purchases</div>
+                        <div class="stat-val">{{ stats.total_orders }}</div>
+                    </div>
+                    <i class="fa-solid fa-receipt text-indigo-200 fs-2"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-widget">
+                    <div>
+                        <div class="stat-label">Low Stock items</div>
+                        <div class="stat-val {% if low_stock_count > 0 %}text-danger{% endif %}">{{ low_stock_count }}</div>
+                    </div>
+                    <i class="fa-solid fa-triangle-exclamation text-indigo-200 fs-2"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chart row -->
+        <div class="row g-4 mb-5">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h5 class="fw-bold mb-1">AI Revenue Prediction</h5>
+                            <p class="text-secondary small mb-0">Linear regression model projecting sales for the next 10 days</p>
+                        </div>
+                        <span class="badge bg-indigo-100 text-indigo-800 rounded-pill px-3 py-2"><i class="fas fa-microchip me-1"></i> AI Sales Engine</span>
+                    </div>
+                    <div style="height: 350px;">
+                        <canvas id="salesForecastChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Table row -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold mb-4">Recent Sales Activity</h5>
+            
+            {% if not recent_orders %}
+                <p class="text-secondary mb-0">No client purchases logged yet.</p>
+            {% else %}
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr class="text-muted border-bottom">
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th class="text-end">Value</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ord in recent_orders %}
+                        <tr>
+                            <td class="fw-bold">#ORD-{{ "%06d"|format(ord.id) }}</td>
+                            <td>{{ ord.created_at }}</td>
+                            <td>
+                                {% if ord.status == 'delivered' %}
+                                    <span class="badge bg-success rounded-pill px-3">Delivered</span>
+                                {% elif ord.status == 'shipped' %}
+                                    <span class="badge bg-primary rounded-pill px-3">Shipped</span>
+                                {% elif ord.status == 'processing' %}
+                                    <span class="badge bg-info text-white rounded-pill px-3">Processing</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark rounded-pill px-3">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end fw-bold">${{ "%.2f"|format(ord.order_val) }}</td>
+                            <td class="text-end">
+                                <a href="{{ url_for('user.order_details', order_id=ord.id) }}" class="btn btn-sm btn-premium-outline py-1 px-3">Track details</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboards.js') }}"></script>
+{% endblock %}

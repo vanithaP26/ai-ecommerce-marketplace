@@ -1,0 +1,103 @@
+{% extends 'layouts/base.html' %}
+{% block title %}My Products | Nexus Market{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="dashboard-sidebar shadow-sm">
+        <h5 class="fw-bold mb-4 px-3 text-muted uppercase small">Vendor Panel</h5>
+        <a href="{{ url_for('vendor.dashboard') }}" class="sidebar-link">
+            <i class="fa-solid fa-chart-line me-2"></i> Overview
+        </a>
+        <a href="{{ url_for('vendor.products') }}" class="sidebar-link active">
+            <i class="fa-solid fa-boxes-stacked me-2"></i> My Products
+        </a>
+        <a href="{{ url_for('vendor.orders') }}" class="sidebar-link">
+            <i class="fa-solid fa-receipt me-2"></i> Client Orders
+        </a>
+        <a href="{{ url_for('vendor.analytics') }}" class="sidebar-link">
+            <i class="fa-solid fa-sparkles me-2"></i> AI Analytics
+        </a>
+        <a href="{{ url_for('user.profile') }}" class="sidebar-link">
+            <i class="fa-regular fa-user-circle me-2"></i> Account Details
+        </a>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h2 class="fw-bold mb-1" style="font-family: var(--font-heading);">Catalog Management</h2>
+                <p class="text-secondary mb-0">Add, edit, or remove your items from the platform</p>
+            </div>
+            <a href="{{ url_for('vendor.product_add') }}" class="btn btn-premium"><i class="fas fa-plus me-2"></i> Add Product</a>
+        </div>
+        
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            {% if not products %}
+                <div class="text-center py-5">
+                    <i class="fa-solid fa-boxes-stacked fs-1 text-muted mb-3"></i>
+                    <h5 class="fw-bold">No Products Registered</h5>
+                    <p class="text-secondary mb-4">Start selling by uploading your first inventory product item.</p>
+                    <a href="{{ url_for('vendor.product_add') }}" class="btn btn-premium btn-sm">Add Product</a>
+                </div>
+            {% else %}
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr class="text-muted border-bottom">
+                            <th>Image</th>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th class="text-center">Stock</th>
+                            <th class="text-end">Price</th>
+                            <th>Status</th>
+                            <th class="text-end" style="width: 180px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prod in products %}
+                        <tr>
+                            <td>
+                                <img src="{{ url_for('static', filename=prod.image_url) if '/' in prod.image_url else url_for('static', filename='images/' ~ prod.image_url) }}" class="rounded-3" style="width: 45px; height: 45px; object-fit: cover;" alt="{{ prod.name }}" onerror="this.src='https://placehold.co/100x100?text=Product'">
+                            </td>
+                            <td class="fw-bold text-dark">{{ prod.name }}</td>
+                            <td>{{ prod.category_name }}</td>
+                            <td class="text-center">
+                                {% if prod.stock == 0 %}
+                                    <span class="text-danger fw-bold">Out of Stock</span>
+                                {% elif prod.stock < 5 %}
+                                    <span class="text-warning fw-bold">{{ prod.stock }} (Low)</span>
+                                {% else %}
+                                    <span class="text-success">{{ prod.stock }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end fw-bold">${{ prod.price }}</td>
+                            <td>
+                                {% if prod.status == 'active' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Active</span>
+                                {% elif prod.status == 'flagged' %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">Flagged</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-1">
+                                    <a href="{{ url_for('vendor.product_edit', product_id=prod.id) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <!-- Delete action form -->
+                                    <form action="{{ url_for('vendor.product_delete', product_id=prod.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this product?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

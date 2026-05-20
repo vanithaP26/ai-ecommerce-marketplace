@@ -1,0 +1,139 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Browse Products | Nexus Market{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3 col-md-4 mb-4">
+            <div class="glass-panel p-4 rounded-4 bg-white border-0 shadow-sm">
+                <h4 class="fw-bold mb-4">Filters</h4>
+                
+                <form action="{{ url_for('user.browse') }}" method="GET" id="filterForm">
+                    <!-- Sorting -->
+                    <div class="mb-4">
+                        <label for="sort" class="form-label fw-semibold">Sort By</label>
+                        <select class="form-select bg-light border-0" id="sort" name="sort" onchange="this.form.submit()">
+                            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest Arrivals</option>
+                            <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                            <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                            <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Customer Rating</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Categories -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Category</label>
+                        <div class="list-group list-group-flush">
+                            <a href="{{ url_for('user.browse', sort=sort, min_price=min_price, max_price=max_price) }}" class="list-group-item list-group-item-action border-0 px-0 bg-transparent {% if not current_category %}fw-bold text-indigo-600{% endif %}">
+                                All Categories
+                            </a>
+                            {% for cat in categories %}
+                            <a href="{{ url_for('user.browse', category=cat.id, sort=sort, min_price=min_price, max_price=max_price) }}" class="list-group-item list-group-item-action border-0 px-0 bg-transparent {% if current_category|string == cat.id|string %}fw-bold text-indigo-600{% endif %}">
+                                {{ cat.name }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% if current_category %}
+                            <input type="hidden" name="category" value="{{ current_category }}">
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Price Range -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Price Range ($)</label>
+                        <div class="d-flex gap-2">
+                            <input type="number" class="form-control bg-light border-0 py-2" placeholder="Min" name="min_price" value="{{ min_price if min_price is not none else '' }}">
+                            <input type="number" class="form-control bg-light border-0 py-2" placeholder="Max" name="max_price" value="{{ max_price if max_price is not none else '' }}">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-premium w-100 py-2">Apply Filters</button>
+                    <a href="{{ url_for('user.browse') }}" class="btn btn-premium-outline w-100 py-2 mt-2">Clear All</a>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Products Grid -->
+        <div class="col-lg-9 col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold m-0">Our Products</h3>
+                <span class="text-muted">{{ products|length }} items shown</span>
+            </div>
+            
+            {% if not products %}
+            <div class="text-center py-5 my-5 bg-white rounded-4 shadow-sm border p-5">
+                <i class="fa-regular fa-folder-open fs-1 text-muted mb-3"></i>
+                <h4 class="fw-bold">No Products Found</h4>
+                <p class="text-secondary">Try adjusting your pricing filters or category settings.</p>
+                <a href="{{ url_for('user.browse') }}" class="btn btn-premium mt-3">Reset Filters</a>
+            </div>
+            {% else %}
+            <div class="row g-4">
+                {% for prod in products %}
+                <div class="col-lg-4 col-md-6 col-sm-6">
+                    <div class="product-card">
+                        {% if prod.stock == 0 %}
+                            <span class="product-badge bg-danger">Sold Out</span>
+                        {% endif %}
+                        <div class="product-img-wrapper">
+                            <img src="{{ url_for('static', filename=prod.image_url) if '/' in prod.image_url else url_for('static', filename='images/' ~ prod.image_url) }}" class="product-img" alt="{{ prod.name }}" onerror="this.src='https://placehold.co/400x400?text=Product+Image'">
+                        </div>
+                        <div class="product-info">
+                            <div class="product-category">{{ prod.category_name }}</div>
+                            <h5 class="product-title"><a href="{{ url_for('user.product_detail', product_id=prod.id) }}">{{ prod.name }}</a></h5>
+                            <div class="small text-muted mb-2"><i class="fas fa-store me-1"></i> {{ prod.business_name }}</div>
+                            
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="text-warning small me-2">
+                                    <i class="fas fa-star"></i> {{ prod.average_rating }}
+                                </div>
+                                <span class="small text-muted">Stock: {{ prod.stock }}</span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="product-price">${{ prod.price }}</span>
+                                <div class="d-flex gap-1">
+                                    <form action="{{ url_for('user.wishlist_toggle', product_id=prod.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px; padding: 0;">
+                                            <i class="far fa-heart"></i>
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('user.compare_add', product_id=prod.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px; padding: 0;">
+                                            <i class="fa-solid fa-shuffle"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination Controls -->
+            {% if total_pages > 1 %}
+            <nav aria-label="Product pagination" class="mt-5">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                        <a class="page-link border-0 rounded-start-pill px-3 py-2 bg-light text-dark" href="{{ url_for('user.browse', page=page-1, category=current_category, sort=sort, min_price=min_price, max_price=max_price) }}" tabindex="-1">Previous</a>
+                    </li>
+                    
+                    {% for p in range(1, total_pages + 1) %}
+                    <li class="page-item {% if page == p %}active{% endif %}">
+                        <a class="page-link border-0 px-3 py-2 mx-1 rounded-3 {% if page == p %}bg-indigo-600 text-white{% else %}bg-light text-dark{% endif %}" href="{{ url_for('user.browse', page=p, category=current_category, sort=sort, min_price=min_price, max_price=max_price) }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                        <a class="page-link border-0 rounded-end-pill px-3 py-2 bg-light text-dark" href="{{ url_for('user.browse', page=page+1, category=current_category, sort=sort, min_price=min_price, max_price=max_price) }}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Product Comparison Matrix | Nexus Market{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="fw-bold mb-4" style="font-family: var(--font-heading);">Comparison Matrix</h2>
+    
+    {% if not products %}
+    <div class="text-center py-5 my-5 bg-white rounded-4 shadow-sm border p-5">
+        <i class="fa-solid fa-shuffle fs-1 text-muted mb-3"></i>
+        <h4 class="fw-bold">No Products to Compare</h4>
+        <p class="text-secondary">Navigate to search or product detail pages and add up to 3 products to compare side-by-side.</p>
+        <a href="{{ url_for('user.browse') }}" class="btn btn-premium mt-3">Browse Products</a>
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <div class="table-responsive">
+            <table class="table table-bordered compare-table align-middle text-center mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 200px; text-align: left; background-color: var(--bg-tertiary);">Feature</th>
+                        {% for prod in products %}
+                        <th class="bg-light">
+                            <div class="position-relative p-2">
+                                <a href="{{ url_for('user.compare_remove', product_id=prod.id) }}" class="btn-close position-absolute top-0 end-0" title="Remove"></a>
+                                <img src="{{ url_for('static', filename=prod.image_url) if '/' in prod.image_url else url_for('static', filename='images/' ~ prod.image_url) }}" class="rounded mb-2" style="width: 80px; height: 80px; object-fit: cover;" alt="{{ prod.name }}" onerror="this.src='https://placehold.co/100x100?text=Product'">
+                                <h6 class="fw-bold mb-0 text-dark">{{ prod.name }}</h6>
+                            </div>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="fw-semibold text-start">Price</td>
+                        {% for prod in products %}
+                        <td class="fs-5 fw-bold text-indigo-600">${{ prod.price }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold text-start">Category</td>
+                        {% for prod in products %}
+                        <td>{{ prod.category_name }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold text-start">Vendor Store</td>
+                        {% for prod in products %}
+                        <td class="text-muted"><i class="fas fa-store"></i> {{ prod.business_name }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold text-start">Rating</td>
+                        {% for prod in products %}
+                        <td class="text-warning"><i class="fas fa-star me-1"></i>{{ prod.average_rating }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold text-start">Stock Availability</td>
+                        {% for prod in products %}
+                        <td>
+                            {% if prod.stock == 0 %}
+                                <span class="badge bg-danger rounded-pill px-3">Out of Stock</span>
+                            {% else %}
+                                <span class="badge bg-success rounded-pill px-3">{{ prod.stock }} units</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold text-start">Description</td>
+                        {% for prod in products %}
+                        <td class="small text-secondary text-start" style="max-width: 250px; white-space: pre-line;">{{ prod.description[:200] }}{% if prod.description|length > 200 %}...{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="fw-semibold text-start">Actions</td>
+                        {% for prod in products %}
+                        <td>
+                            <a href="{{ url_for('user.product_detail', product_id=prod.id) }}" class="btn btn-premium-outline btn-sm w-100 mb-2">View Detail</a>
+                            {% if session.get('role') == 'customer' %}
+                            <form action="{{ url_for('user.cart_add', product_id=prod.id) }}" method="POST">
+                                <button type="submit" class="btn btn-premium btn-sm w-100" {% if prod.stock == 0 %}disabled{% endif %}>Add to Cart</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

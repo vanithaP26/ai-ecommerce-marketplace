@@ -1,0 +1,68 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Order History | Nexus Market{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="fw-bold mb-4" style="font-family: var(--font-heading);">My Purchases</h2>
+    
+    {% if not orders %}
+    <div class="text-center py-5 my-5 bg-white rounded-4 shadow-sm border p-5">
+        <i class="fa-solid fa-receipt fs-1 text-muted mb-3"></i>
+        <h4 class="fw-bold">No Orders Placed Yet</h4>
+        <p class="text-secondary">You haven't bought anything from the marketplace yet.</p>
+        <a href="{{ url_for('user.browse') }}" class="btn btn-premium mt-3">Start Shopping</a>
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr class="text-muted border-bottom">
+                        <th scope="col" style="width: 150px;">Order ID</th>
+                        <th scope="col">Order Date</th>
+                        <th scope="col">Payment Status</th>
+                        <th scope="col">Delivery Status</th>
+                        <th scope="col" class="text-end">Total Price</th>
+                        <th scope="col" class="text-end" style="width: 150px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td class="fw-bold text-indigo-600">#ORD-{{ "%06d"|format(order.id) }}</td>
+                        <td>{{ order.created_at }}</td>
+                        <td>
+                            {% if order.payment_status == 'paid' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Paid</span>
+                            {% elif order.payment_status == 'failed' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">Failed</span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if order.status == 'delivered' %}
+                                <span class="badge bg-success rounded-pill px-3">Delivered</span>
+                            {% elif order.status == 'processing' %}
+                                <span class="badge bg-info text-white rounded-pill px-3">Processing</span>
+                            {% elif order.status == 'shipped' %}
+                                <span class="badge bg-primary rounded-pill px-3">Shipped</span>
+                            {% elif order.status == 'cancelled' %}
+                                <span class="badge bg-secondary rounded-pill px-3">Cancelled</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark rounded-pill px-3">Pending Review</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end fw-bold">${{ order.total_amount }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('user.order_details', order_id=order.id) }}" class="btn btn-sm btn-premium py-1 px-3">Track Order</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

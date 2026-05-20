@@ -1,0 +1,56 @@
+{% extends 'layouts/base.html' %}
+{% block title %}My Wishlist | Nexus Market{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="fw-bold mb-4" style="font-family: var(--font-heading);">My Wishlist</h2>
+    
+    {% if not wishlist_items %}
+    <div class="text-center py-5 my-5 bg-white rounded-4 shadow-sm border p-5">
+        <i class="fa-regular fa-heart fs-1 text-muted mb-3"></i>
+        <h4 class="fw-bold">Your Wishlist is Empty</h4>
+        <p class="text-secondary">Save items you like here by tapping the heart icon on any product card.</p>
+        <a href="{{ url_for('user.browse') }}" class="btn btn-premium mt-3">Explore Products</a>
+    </div>
+    {% else %}
+    <div class="row g-4">
+        {% for prod in wishlist_items %}
+        <div class="col-lg-3 col-md-4 col-sm-6">
+            <div class="product-card">
+                <div class="product-img-wrapper">
+                    <img src="{{ url_for('static', filename=prod.image_url) if '/' in prod.image_url else url_for('static', filename='images/' ~ prod.image_url) }}" class="product-img" alt="{{ prod.name }}" onerror="this.src='https://placehold.co/400x400?text=Product+Image'">
+                </div>
+                <div class="product-info">
+                    <h5 class="product-title"><a href="{{ url_for('user.product_detail', product_id=prod.id) }}">{{ prod.name }}</a></h5>
+                    <div class="small text-muted mb-2"><i class="fas fa-store me-1"></i> {{ prod.business_name }}</div>
+                    
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="text-warning small me-2">
+                            <i class="fas fa-star"></i> {{ prod.average_rating }}
+                        </div>
+                        <span class="small text-muted">Stock: {{ prod.stock }}</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <span class="product-price">${{ prod.price }}</span>
+                        <div class="d-flex gap-1">
+                            <form action="{{ url_for('user.wishlist_toggle', product_id=prod.id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-danger text-white rounded-circle" style="width: 32px; height: 32px; padding: 0;" title="Remove">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </form>
+                            <form action="{{ url_for('user.compare_add', product_id=prod.id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px; padding: 0;" title="Compare">
+                                    <i class="fa-solid fa-shuffle"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

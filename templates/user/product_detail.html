@@ -1,0 +1,160 @@
+{% extends 'layouts/base.html' %}
+{% block title %}{{ product.name }} | Nexus Market{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row g-5">
+        <!-- Product Image Col -->
+        <div class="col-md-6">
+            <div class="bg-white p-4 rounded-4 shadow-sm border text-center">
+                <img src="{{ url_for('static', filename=product.image_url) if '/' in product.image_url else url_for('static', filename='images/' ~ product.image_url) }}" class="img-fluid rounded-3" style="max-height: 480px; object-fit: contain; width: 100%;" alt="{{ product.name }}" onerror="this.src='https://placehold.co/500x500?text=Product+Image'">
+            </div>
+        </div>
+        
+        <!-- Product Details Col -->
+        <div class="col-md-6">
+            <div class="product-details-panel">
+                <div class="product-category mb-2">{{ product.category_name }}</div>
+                <h1 class="fw-bold mb-2" style="font-family: var(--font-heading);">{{ product.name }}</h1>
+                
+                <div class="d-flex align-items-center mb-4">
+                    <div class="text-warning fs-5 me-2">
+                        <i class="fas fa-star"></i> <span class="fw-bold">{{ product.average_rating }}</span>
+                    </div>
+                    <span class="text-secondary border-start ps-2">({{ reviews|length }} customer reviews)</span>
+                    <span class="ms-3 text-secondary border-start ps-2"><i class="fas fa-store text-muted me-1"></i> Sold by: <span class="fw-semibold text-dark">{{ product.business_name }}</span></span>
+                </div>
+                
+                <div class="mb-4">
+                    <span class="display-5 fw-bold text-dark">${{ product.price }}</span>
+                </div>
+                
+                <p class="text-secondary mb-4 fs-6" style="white-space: pre-line;">{{ product.description }}</p>
+                
+                <!-- Stock warnings -->
+                <div class="mb-4">
+                    {% if product.stock == 0 %}
+                        <span class="badge bg-danger rounded-pill px-3 py-2"><i class="fas fa-times-circle me-1"></i> Out of Stock</span>
+                    {% elif product.stock < 5 %}
+                        <span class="badge bg-warning text-dark rounded-pill px-3 py-2"><i class="fas fa-exclamation-triangle me-1"></i> Low Stock (Only {{ product.stock }} items left!)</span>
+                    {% else %}
+                        <span class="badge bg-success rounded-pill px-3 py-2"><i class="fas fa-check-circle me-1"></i> In Stock ({{ product.stock }} available)</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Cart Form -->
+                {% if session.get('role') != 'vendor' and session.get('role') != 'admin' %}
+                <form action="{{ url_for('user.cart_add', product_id=product.id) }}" method="POST" class="row g-3 align-items-center mb-4">
+                    <div class="col-auto">
+                        <label for="quantity" class="visually-hidden">Quantity</label>
+                        <input type="number" class="form-control bg-light border-0 py-2 text-center" id="quantity" name="quantity" value="1" min="1" max="{{ product.stock }}" style="width: 80px;" {% if product.stock == 0 %}disabled{% endif %}>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-premium px-4 py-2" {% if product.stock == 0 %}disabled{% endif %}>
+                            <i class="fas fa-shopping-bag me-2"></i> Add to Cart
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+                
+                <div class="d-flex gap-2">
+                    <form action="{{ url_for('user.wishlist_toggle', product_id=product.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-premium-outline">
+                            <i class="far fa-heart me-2"></i> Wishlist
+                        </button>
+                    </form>
+                    <form action="{{ url_for('user.compare_add', product_id=product.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-premium-outline">
+                            <i class="fa-solid fa-shuffle me-2"></i> Compare
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reviews Section -->
+    <div class="row mt-5 pt-5 border-top">
+        <div class="col-lg-6 mb-5">
+            <h3 class="fw-bold mb-4">Customer Reviews</h3>
+            
+            {% if not reviews %}
+                <p class="text-secondary">No reviews for this product yet. Be the first to buy and review!</p>
+            {% else %}
+                <div class="reviews-list">
+                    {% for rev in reviews %}
+                    <div class="card border-0 bg-light p-4 rounded-4 mb-3 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold m-0"><i class="fa-regular fa-user-circle me-1 text-secondary"></i> {{ rev.username }}</h6>
+                            <div class="text-warning">
+                                {% for r in range(rev.rating) %}
+                                    <i class="fas fa-star small"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="text-secondary mb-1 small">{{ rev.created_at }}</p>
+                        <p class="mb-0 text-dark">{{ rev.comment }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Add Review Form (Only users with purchase history can write) -->
+        <div class="col-lg-5 offset-lg-1">
+            {% if can_review %}
+            <div class="glass-panel p-4 rounded-4 border bg-white shadow-sm">
+                <h4 class="fw-bold mb-3">Add Your Review</h4>
+                <form action="{{ url_for('user.product_detail', product_id=product.id) }}" method="POST">
+                    <div class="mb-3">
+                        <label for="rating" class="form-label fw-semibold">Rating</label>
+                        <select class="form-select bg-light border-0" id="rating" name="rating" required>
+                            <option value="5" selected>5 Stars - Excellent</option>
+                            <option value="4">4 Stars - Good</option>
+                            <option value="3">3 Stars - Average</option>
+                            <option value="2">2 Stars - Poor</option>
+                            <option value="1">1 Star - Very Poor</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label fw-semibold">Your Comment</label>
+                        <textarea class="form-control bg-light border-0" id="comment" name="comment" rows="4" required placeholder="Share your experience with this item..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-premium w-100 py-2">Submit Review</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Similar Products Grid -->
+    {% if similar %}
+    <div class="mt-5 pt-5 border-top">
+        <h3 class="fw-bold mb-4">Similar Products</h3>
+        <div class="row g-4">
+            {% for prod in similar %}
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="product-card">
+                    <div class="product-img-wrapper">
+                        <img src="{{ url_for('static', filename=prod.image_url) if '/' in prod.image_url else url_for('static', filename='images/' ~ prod.image_url) }}" class="product-img" alt="{{ prod.name }}" onerror="this.src='https://placehold.co/400x400?text=Product+Image'">
+                    </div>
+                    <div class="product-info">
+                        <h5 class="product-title"><a href="{{ url_for('user.product_detail', product_id=prod.id) }}">{{ prod.name }}</a></h5>
+                        <div class="small text-muted mb-2"><i class="fas fa-store me-1"></i> {{ prod.business_name }}</div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="product-price">${{ prod.price }}</span>
+                            <form action="{{ url_for('user.compare_add', product_id=prod.id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px; padding: 0;">
+                                    <i class="fa-solid fa-shuffle"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

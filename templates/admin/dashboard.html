@@ -1,0 +1,167 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Admin Dashboard | Nexus Market{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="dashboard-sidebar shadow-sm">
+        <h5 class="fw-bold mb-4 px-3 text-muted uppercase small">Admin Panel</h5>
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link active">
+            <i class="fa-solid fa-chart-pie me-2"></i> Overview
+        </a>
+        <a href="{{ url_for('admin.users') }}" class="sidebar-link">
+            <i class="fa-solid fa-users me-2"></i> Customers
+        </a>
+        <a href="{{ url_for('admin.vendors') }}" class="sidebar-link">
+            <i class="fa-solid fa-store me-2"></i> Vendors
+        </a>
+        <a href="{{ url_for('user.profile') }}" class="sidebar-link">
+            <i class="fa-regular fa-user-circle me-2"></i> Account Details
+        </a>
+    </div>
+    
+    <!-- Main Dashboard Grid -->
+    <div class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h2 class="fw-bold mb-1" style="font-family: var(--font-heading);">System Administration</h2>
+                <p class="text-secondary mb-0">Platform overview, vendor registrations and security logs</p>
+            </div>
+        </div>
+        
+        <!-- Metrics -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="stat-widget">
+                    <div>
+                        <div class="stat-label">Total Platform Sales</div>
+                        <div class="stat-val text-indigo-600">${{ "%.2f"|format(stats.total_sales) }}</div>
+                    </div>
+                    <i class="fa-solid fa-chart-column text-indigo-200 fs-2"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-widget">
+                    <div>
+                        <div class="stat-label">Registered Customers</div>
+                        <div class="stat-val">{{ stats.customer_count }}</div>
+                    </div>
+                    <i class="fa-solid fa-user-group text-indigo-200 fs-2"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-widget">
+                    <div>
+                        <div class="stat-label">Vendor Stores</div>
+                        <div class="stat-val">{{ stats.vendor_count }}</div>
+                    </div>
+                    <i class="fa-solid fa-store text-indigo-200 fs-2"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-widget">
+                    <div>
+                        <div class="stat-label">Active Listings</div>
+                        <div class="stat-val">{{ stats.product_count }}</div>
+                    </div>
+                    <i class="fa-solid fa-boxes-packing text-indigo-200 fs-2"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Interactive sections -->
+        <div class="row g-4 mb-5">
+            <!-- Left Side: Approvals & Fraud Logs -->
+            <div class="col-lg-6">
+                <!-- Vendor Approvals Queue -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                    <h5 class="fw-bold mb-3"><i class="fa-solid fa-user-check text-indigo-600 me-2"></i> Vendor Approval Queue</h5>
+                    
+                    {% if not pending_vendors %}
+                        <div class="alert alert-success border-0 rounded-3 mb-0" role="alert">
+                            <i class="fas fa-check-circle me-2"></i> Approval queue is empty.
+                        </div>
+                    {% else %}
+                        <div class="list-group list-group-flush">
+                            {% for vendor in pending_vendors %}
+                            <div class="list-group-item px-0 border-top py-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0">{{ vendor.business_name }}</h6>
+                                    <p class="small text-muted mb-0">Owner: {{ vendor.username }} ({{ vendor.email }})</p>
+                                    <p class="small text-secondary mb-0 mt-1 italic">"{{ vendor.description[:80] }}..."</p>
+                                </div>
+                                <form action="{{ url_for('admin.vendor_approve', vendor_id=vendor.id) }}" method="POST">
+                                    <button type="submit" class="btn btn-sm btn-premium py-1 px-3">Approve</button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- AI Security & Fraud Logs -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <h5 class="fw-bold mb-3"><i class="fa-solid fa-shield-halved text-danger me-2"></i> Platform Security & Fraud Audits</h5>
+                    
+                    {% if not fraud_logs %}
+                        <p class="text-secondary mb-0">No suspicious activities logged.</p>
+                    {% else %}
+                        <div class="list-group list-group-flush" style="max-height: 250px; overflow-y: auto;">
+                            {% for log in fraud_logs %}
+                            <div class="list-group-item px-0 border-top py-2 small">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="badge {% if log.action_type == 'fraud_flag' %}bg-danger{% else %}bg-warning text-dark{% endif %} rounded-pill uppercase text-xxs">{{ log.action_type }}</span>
+                                    <span class="text-muted">{{ log.created_at }}</span>
+                                </div>
+                                <p class="mb-0 text-dark"><strong>User:</strong> {{ log.username or 'Guest' }} | {{ log.action_details }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Right Side: Suspicious Vendors & Charts -->
+            <div class="col-lg-6">
+                <!-- AI Suspicious Vendors detection -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                    <h5 class="fw-bold mb-3"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i> AI Suspicious Vendor Flags</h5>
+                    
+                    {% if not suspicious_vendors %}
+                        <div class="alert alert-success border-0 rounded-3 mb-0" role="alert">
+                            <i class="fas fa-check-circle me-2"></i> All active vendor ratings and cancellations are within healthy bounds.
+                        </div>
+                    {% else %}
+                        <div class="list-group list-group-flush">
+                            {% for flag in suspicious_vendors %}
+                            <div class="list-group-item px-0 border-top py-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0">{{ flag.business_name }}</h6>
+                                    <p class="small text-danger mb-0 mt-1"><i class="fas fa-circle-exclamation me-1"></i> {{ flag.reason }}</p>
+                                </div>
+                                <form action="{{ url_for('admin.vendor_block', vendor_id=flag.vendor_id) }}" method="POST" onsubmit="return confirm('Suspend this vendor?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-3">Suspend Store</button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Platform Sales Analytics Chart -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <h5 class="fw-bold mb-3">AI Sales Forecast</h5>
+                    <div style="height: 250px;">
+                        <canvas id="salesForecastChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboards.js') }}"></script>
+{% endblock %}

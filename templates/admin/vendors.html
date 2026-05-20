@@ -1,0 +1,92 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Manage Vendors | Admin Panel{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="dashboard-sidebar shadow-sm">
+        <h5 class="fw-bold mb-4 px-3 text-muted uppercase small">Admin Panel</h5>
+        <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link">
+            <i class="fa-solid fa-chart-pie me-2"></i> Overview
+        </a>
+        <a href="{{ url_for('admin.users') }}" class="sidebar-link">
+            <i class="fa-solid fa-users me-2"></i> Customers
+        </a>
+        <a href="{{ url_for('admin.vendors') }}" class="sidebar-link active">
+            <i class="fa-solid fa-store me-2"></i> Vendors
+        </a>
+        <a href="{{ url_for('user.profile') }}" class="sidebar-link">
+            <i class="fa-regular fa-user-circle me-2"></i> Account Details
+        </a>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="dashboard-content">
+        <div class="mb-5">
+            <h2 class="fw-bold mb-1" style="font-family: var(--font-heading);">Vendor Directories</h2>
+            <p class="text-secondary mb-0">Track store details, average quality rating scores, and verify operational status values</p>
+        </div>
+        
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr class="text-muted border-bottom">
+                            <th>Store ID</th>
+                            <th>Business Name</th>
+                            <th>Owner Profile</th>
+                            <th class="text-center">Rating</th>
+                            <th>Status</th>
+                            <th class="text-end" style="width: 200px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vendor in vendors %}
+                        <tr>
+                            <td class="fw-bold">#VND-{{ "%04d"|format(vendor.id) }}</td>
+                            <td class="fw-bold text-dark">{{ vendor.business_name }}</td>
+                            <td>
+                                <div>{{ vendor.username }}</div>
+                                <span class="small text-muted">{{ vendor.email }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-indigo-50 text-indigo-800"><i class="fas fa-star text-warning me-1"></i> {{ vendor.rating }}</span>
+                            </td>
+                            <td>
+                                {% if vendor.status == 'approved' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Approved</span>
+                                {% elif vendor.status == 'suspended' %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">Suspended</span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-1">
+                                    {% if vendor.status == 'approved' %}
+                                        <form action="{{ url_for('admin.vendor_suspend', vendor_id=vendor.id) }}" method="POST">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger w-100 py-1" onclick="return confirm('Suspend this vendor store?')">Suspend Store</button>
+                                        </form>
+                                    {% elif vendor.status == 'suspended' %}
+                                        <form action="{{ url_for('admin.vendor_approve', vendor_id=vendor.id) }}" method="POST">
+                                            <button type="submit" class="btn btn-sm btn-outline-success w-100 py-1">Approve Store</button>
+                                        </form>
+                                    {% else %}
+                                        <form action="{{ url_for('admin.vendor_approve', vendor_id=vendor.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-premium py-1 px-3">Approve</button>
+                                        </form>
+                                        <form action="{{ url_for('admin.vendor_suspend', vendor_id=vendor.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-1">Reject</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

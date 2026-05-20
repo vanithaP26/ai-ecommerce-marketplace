@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Nexus Market | AI-Powered eCommerce{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Design CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom navbar-light">
+        <div class="container">
+            <a class="navbar-brand brand-text" href="{{ url_for('user.index') }}">
+                <i class="fa-solid fa-microchip-board text-indigo-500"></i> Nexus Market
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <!-- Search Box -->
+                <form class="d-flex mx-auto col-lg-5 col-md-8 my-2 my-lg-0 position-relative" action="{{ url_for('user.search') }}" method="GET">
+                    <div class="input-group w-100">
+                        <input class="form-control rounded-start-pill bg-light border-0 px-4" type="search" placeholder="Search products, brands..." aria-label="Search" name="q" id="search-input" autocomplete="off" value="{{ request.args.get('q', '') }}">
+                        <button class="btn btn-premium rounded-end-pill px-3" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <!-- Auto-suggestions Dropdown -->
+                    <div id="suggestions-box" class="suggestions-box"></div>
+                </form>
+                
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <!-- Categories Menu -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-dark font-medium" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Categories
+                        </a>
+                        <ul class="dropdown-menu border-0 shadow-lg">
+                            <li><a class="dropdown-item" href="{{ url_for('user.browse') }}">All Products</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% for cat in global_categories %}
+                                <li><a class="dropdown-item" href="{{ url_for('user.browse', category=cat.id) }}">{{ cat.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="{{ url_for('user.compare') }}" title="Product Matrix">
+                            <i class="fa-solid fa-shuffle"></i>
+                        </a>
+                    </li>
+                    
+                    <!-- Dynamic Auth Controls -->
+                    {% if session.get('user_id') %}
+                        {% if session.get('role') == 'customer' %}
+                            <li class="nav-item">
+                                <a class="nav-link text-dark position-relative" href="{{ url_for('user.wishlist') }}">
+                                    <i class="fa-regular fa-heart"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark position-relative me-2" href="{{ url_for('user.cart') }}">
+                                    <i class="fa-solid fa-bag-shopping"></i>
+                                    <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa-regular fa-user me-1"></i> {{ session.get('username') }}
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg">
+                                    <li><a class="dropdown-item" href="{{ url_for('user.profile') }}"><i class="fa-regular fa-user-circle me-2"></i>Profile</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('user.orders_history') }}"><i class="fa-solid fa-dolly me-2"></i>My Orders</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="fa-solid fa-sign-out-alt me-2"></i>Logout</a></li>
+                                </ul>
+                            </li>
+                        {% elif session.get('role') == 'vendor' %}
+                            <li class="nav-item">
+                                <a class="nav-link text-dark font-medium" href="{{ url_for('vendor.dashboard') }}">
+                                    <i class="fa-solid fa-chalkboard-user me-1"></i> Vendor Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i class="fa-solid fa-sign-out-alt"></i> Logout
+                                </a>
+                            </li>
+                        {% elif session.get('role') == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link text-dark font-medium" href="{{ url_for('admin.dashboard') }}">
+                                    <i class="fa-solid fa-screwdriver-wrench me-1"></i> Admin Panel
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i class="fa-solid fa-sign-out-alt"></i> Logout
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="{{ url_for('auth.login') }}">Login</a>
+                        </li>
+                        <li class="nav-item ms-2">
+                            <a class="btn btn-premium py-1 px-3" href="{{ url_for('auth.register') }}">Sign Up</a>
+                        </li>
+                    {% endif %}
+                    
+                    <!-- Dark/Light Theme Button -->
+                    <li class="nav-item ms-3 border-start ps-3">
+                        <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Dark/Light Mode">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Flash Messages -->
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show border-0 rounded-3 shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="fade" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    
+    <!-- Main Content Grid -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white border-top py-4 mt-5 text-center text-secondary">
+        <div class="container">
+            <p class="mb-1">&copy; {{ current_year }} Nexus Market. Created as final-year portfolio application.</p>
+            <p class="small text-muted mb-0">Powered by Flask MVC & Python AI optimization algorithms.</p>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap 5 JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Global Script -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
