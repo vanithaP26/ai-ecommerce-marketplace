@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Flask, render_template, session
 from config import Config
 from models.db_manager import DatabaseManager
@@ -9,6 +10,39 @@ from routes.user import user_bp
 from routes.vendor import vendor_bp
 from routes.admin import admin_bp
 from routes.api import api_bp
+
+def format_indian_rupee(amount):
+    try:
+        amount = float(amount)
+    except (ValueError, TypeError):
+        return f"₹{amount}"
+    
+    if amount.is_integer():
+        num = str(int(amount))
+        dec_str = ""
+    else:
+        s = f"{amount:.2f}"
+        parts = s.split('.')
+        num = parts[0]
+        dec_str = "." + parts[1]
+        if dec_str == ".00":
+            dec_str = ""
+            
+    if len(num) <= 3:
+        int_part = num
+    else:
+        last_three = num[-3:]
+        rest = num[:-3]
+        groups = []
+        while len(rest) > 2:
+            groups.append(rest[-2:])
+            rest = rest[:-2]
+        if rest:
+            groups.append(rest)
+        groups.reverse()
+        int_part = ",".join(groups) + "," + last_three
+        
+    return f"₹{int_part}{dec_str}"
 
 def create_app():
     app = Flask(__name__)
@@ -69,14 +103,18 @@ def create_app():
         # but we could close it if desired. Leaving open for pool performance.
         pass
         
+    app.jinja_env.filters['rupee'] = format_indian_rupee
     return app
 
 def _seed_default_admin(db_mgr):
-    """Creates a default admin user and vendor test accounts if not already in system."""
+    """Creates a default admin user, 8 vendors, 1 pending vendor, 12 categories, 96 products and runs the Pillow image generator."""
     try:
+        from utils.helpers import hash_password
+        from utils.seed_data import CATEGORIES, VENDORS, PRODUCTS, generate_seed_image
+        
+        # 1. Seed admin
         admin_exists = db_mgr.execute_query("SELECT id FROM users WHERE role = 'admin'")
         if not admin_exists:
-            from utils.helpers import hash_password
             admin_pw_hash = hash_password('admin123')
             db_mgr.execute_non_query(
                 "INSERT INTO users (username, email, password_hash, role, status) "
@@ -85,51 +123,97 @@ def _seed_default_admin(db_mgr):
             )
             print("[DATABASE SEED] Default admin account seeded: admin@nexusmarket.com / admin123")
             
-            # Let's seed a test vendor as well for easy testing!
-            vendor_pw_hash = hash_password('vendor123')
-            v_user_id = db_mgr.execute_non_query(
-                "INSERT INTO users (username, email, password_hash, role, status) "
-                "VALUES ('techvendor', 'vendor@tech.com', %s, 'vendor', 'active')",
-                [vendor_pw_hash]
-            )
-            db_mgr.execute_non_query(
-                "INSERT INTO vendors (user_id, business_name, description, status, rating) "
-                "VALUES (%s, 'Gizmo Tech Store', 'Your premier vendor for smartphones, smart home tools, and notebooks.', 'approved', 4.5)",
-                [v_user_id]
-            )
-            
-            # Let's seed a second pending vendor to demonstrate approvals
-            pending_pw_hash = hash_password('vendor123')
+        # 2. Seed categories (ensure all 12 are in db)
+        for cat in CATEGORIES:
+            cat_exists = db_mgr.execute_query("SELECT id FROM categories WHERE slug = %s", [cat['slug']])
+            if not cat_exists:
+                db_mgr.execute_non_query(
+                    "INSERT INTO categories (name, description, slug) VALUES (%s, %s, %s)",
+                    [cat['name'], cat['description'], cat['slug']]
+                )
+        print("[DATABASE SEED] Categories verified/seeded.")
+        
+        # 3. Seed 8 approved vendors
+        for v in VENDORS:
+            v_exists = db_mgr.execute_query("SELECT id FROM users WHERE email = %s", [v['email']])
+            if not v_exists:
+                pw_hash = hash_password('vendor123')
+                v_user_id = db_mgr.execute_non_query(
+                    "INSERT INTO users (username, email, password_hash, role, status) "
+                    "VALUES (%s, %s, %s, 'vendor', 'active')",
+                    [v['username'], v['email'], pw_hash]
+                )
+                db_mgr.execute_non_query(
+                    "INSERT INTO vendors (user_id, business_name, description, status, rating) "
+                    "VALUES (%s, %s, %s, 'approved', 4.5)",
+                    [v_user_id, v['business_name'], v['description']]
+                )
+                
+        # Seed 1 pending vendor for dashboard approval checks
+        pending_exists = db_mgr.execute_query("SELECT id FROM users WHERE email = 'urban@trends.com'")
+        if not pending_exists:
+            pw_hash = hash_password('vendor123')
             pv_user_id = db_mgr.execute_non_query(
                 "INSERT INTO users (username, email, password_hash, role, status) "
-                "VALUES ('fashionshop', 'vendor@fashion.com', %s, 'vendor', 'active')",
-                [pending_pw_hash]
+                "VALUES ('urban_trends', 'urban@trends.com', %s, 'vendor', 'active')",
+                [pw_hash]
             )
             db_mgr.execute_non_query(
                 "INSERT INTO vendors (user_id, business_name, description, status, rating) "
-                "VALUES (%s, 'Vogue Outfitters', 'Boutique collection of modern apparel and premium watches.', 'pending', 0.0)",
+                "VALUES (%s, 'Urban Trends', 'Modern streetwear and premium accessories.', 'pending', 0.0)",
                 [pv_user_id]
             )
+        print("[DATABASE SEED] Vendors verified/seeded.")
+        
+        # Build category & vendor ID lookups
+        cat_rows = db_mgr.execute_query("SELECT id, name, slug FROM categories")
+        cat_map = {row['name']: row['id'] for row in cat_rows}
+        cat_slug_map = {row['name']: row['slug'] for row in cat_rows}
+        
+        v_rows = db_mgr.execute_query("SELECT id, business_name FROM vendors")
+        vendor_map = {row['business_name']: row['id'] for row in v_rows}
+        
+        # 4. Seed products and generate card images
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        for idx, p in enumerate(PRODUCTS):
+            # Check if product exists
+            prod_exists = db_mgr.execute_query("SELECT id FROM products WHERE name = %s", [p['name']])
             
-            # Let's seed some initial products for Gizmo Tech Store
-            vendor_id = db_mgr.execute_query("SELECT id FROM vendors WHERE business_name = 'Gizmo Tech Store'")[0]['id']
+            # Determine image filename and path
+            if 'image_file' in p:
+                img_filename = p['image_file']
+            else:
+                clean_name = re.sub(r'[^a-zA-Z0-9]', '_', p['name'].lower())
+                img_filename = f"{clean_name}.jpg"
+                
+            img_rel_path = f"images/products/{img_filename}"
+            img_abs_path = os.path.join(base_dir, 'static', 'images', 'products', img_filename)
             
-            # Find category IDs
-            electronics_id = db_mgr.execute_query("SELECT id FROM categories WHERE slug = 'electronics'")[0]['id']
-            home_id = db_mgr.execute_query("SELECT id FROM categories WHERE slug = 'home-kitchen'")[0]['id']
+            # Generate the image if it doesn't exist
+            if not os.path.exists(img_abs_path):
+                cat_slug = cat_slug_map.get(p['category'], 'general')
+                try:
+                    generate_seed_image(p['name'], cat_slug, img_abs_path)
+                except Exception as img_err:
+                    print(f"[IMAGE GENERATOR ERROR] Failed to generate {img_filename}: {img_err}")
             
-            db_mgr.execute_non_query(
-                "INSERT INTO products (vendor_id, category_id, name, description, price, stock, image_url, status, average_rating) "
-                "VALUES "
-                "(%s, %s, 'Titan Smart Watch X', 'Cutting edge smartwatch with OLED display, GPS track, blood oxygen logs and 7-day battery.', 199.99, 25, 'uploads/products/watch.jpg', 'active', 4.8),"
-                "(%s, %s, 'Nexus Pro Wireless Earbuds', 'Noise cancelling bluetooth 5.2 earbuds with deep bass and charging case.', 89.95, 4, 'uploads/products/earbuds.jpg', 'active', 4.5),"
-                "(%s, %s, 'AeroBook Pro 15', 'Super slim 15.6 inch laptop with 16GB RAM, 512GB SSD, Intel Core i7 processor.', 899.00, 12, 'uploads/products/laptop.jpg', 'active', 4.7),"
-                "(%s, %s, 'Smart Thermostat Hub', 'Smart home climate hub supporting voice control and energy optimization schedules.', 129.00, 0, 'uploads/products/thermostat.jpg', 'active', 4.2)",
-                [vendor_id, electronics_id, vendor_id, electronics_id, vendor_id, electronics_id, vendor_id, home_id]
-            )
-            print("[DATABASE SEED] Sample products and vendor accounts successfully seeded.")
+            if not prod_exists:
+                cat_id = cat_map.get(p['category'])
+                vendor_id = vendor_map.get(p['vendor'])
+                if cat_id and vendor_id:
+                    # Make every 10th product featured (approx 10 featured items)
+                    is_featured = 1 if idx % 10 == 0 else 0
+                    db_mgr.execute_non_query(
+                        "INSERT INTO products (vendor_id, category_id, name, description, price, stock, image_url, status, average_rating, is_featured, discount_percentage) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, 'active', %s, %s, %s)",
+                        [vendor_id, cat_id, p['name'], p['description'], p['price'], p['stock'], img_rel_path, p['rating'], is_featured, p.get('discount', 0)]
+                    )
+        print("[DATABASE SEED] 96+ product catalog successfully verified and seeded.")
     except Exception as e:
         print(f"[DATABASE SEED ERROR] Failed to seed default data: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == '__main__':
     app = create_app()

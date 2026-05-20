@@ -4,6 +4,7 @@ from services.ai_service import AIService
 from routes.auth import login_required, customer_required
 from utils.helpers import generate_invoice_html
 import os
+import uuid
 
 user_bp = Blueprint('user', __name__)
 db = DatabaseManager()
@@ -422,12 +423,29 @@ def checkout():
     total = sum(item['price'] * item['quantity'] for item in cart_items)
     
     if request.method == 'POST':
-        shipping_address = request.form.get('shipping_address', '').strip()
+        full_name = request.form.get('full_name', '').strip()
+        email = request.form.get('email', '').strip()
+        phone = request.form.get('phone', '').strip()
+        address = request.form.get('address', '').strip()
+        city = request.form.get('city', '').strip()
+        state = request.form.get('state', '').strip()
+        pincode = request.form.get('pincode', '').strip()
         payment_method = request.form.get('payment_method', 'Credit Card')
         
-        if not shipping_address:
-            flash('Please enter a shipping address.', 'danger')
+        # Backend validation and error handling
+        if not all([full_name, email, phone, address, city, state, pincode]):
+            flash('All billing and shipping fields are required.', 'danger')
             return render_template('user/checkout.html', cart_items=cart_items, total=total)
+            
+        if '@' not in email:
+            flash('Please enter a valid email address.', 'danger')
+            return render_template('user/checkout.html', cart_items=cart_items, total=total)
+            
+        if not pincode.isdigit() or len(pincode) != 6:
+            flash('Please enter a valid 6-digit PIN code.', 'danger')
+            return render_template('user/checkout.html', cart_items=cart_items, total=total)
+            
+        shipping_address = f"Name: {full_name}\nEmail: {email}\nPhone: {phone}\nAddress: {address}, {city}, {state} - {pincode}"
             
         # Inventory verification right before finalizing order (concurrency check)
         for item in cart_items:
@@ -508,6 +526,8 @@ def checkout():
         except Exception as e:
             flash('Error finalizing order. Please check billing parameters.', 'danger')
             print(f"[CHECKOUT ERROR] {e}")
+            import traceback
+            traceback.print_exc()
             
     return render_template('user/checkout.html', cart_items=cart_items, total=total)
 

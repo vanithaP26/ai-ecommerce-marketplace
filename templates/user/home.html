@@ -3,23 +3,65 @@
 
 {% block content %}
 <!-- Hero Section -->
-<div class="bg-light py-5 mb-5 border-bottom">
+<div class="hero-section py-5 mb-5">
     <div class="container">
         <div class="row align-items-center py-4">
-            <div class="col-lg-6">
+            <!-- Left Column: Copy & Actions -->
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <span class="badge bg-indigo-100 text-indigo-800 rounded-pill px-3 py-1 mb-3"><i class="fa-solid fa-sparkles text-warning me-1"></i> AI-Optimized Marketplace</span>
                 <h1 class="display-4 fw-extrabold mb-3" style="font-family: var(--font-heading);">
-                    Discover the Future of <span class="text-indigo-600" style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Marketplaces</span>
+                    Discover the Future of <span class="text-indigo-600" style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">E-Commerce</span>
                 </h1>
                 <p class="lead text-secondary mb-4">
-                    Nexus Market combines multiple high-quality vendors with Python-based AI intelligence to offer smart product recommendations, search rankings, and predictive stock updates.
+                    Nexus Market combines multiple premium vendors with Python-based AI intelligence to offer smart product recommendations, search rankings, and predictive stock updates.
                 </p>
                 <div class="d-flex gap-3">
-                    <a href="{{ url_for('user.browse') }}" class="btn btn-premium px-4 py-2">Shop Now</a>
-                    <a href="{{ url_for('auth.register') }}?role=vendor" class="btn btn-premium-outline px-4 py-2">Become Vendor</a>
+                    <a href="{{ url_for('user.browse') }}" class="btn btn-premium px-4 py-2"><i class="fa-solid fa-bag-shopping me-2"></i> Shop Now</a>
+                    <a href="{{ url_for('auth.register') }}?role=vendor" class="btn btn-premium-outline px-4 py-2"><i class="fa-solid fa-store me-2"></i> Become Vendor</a>
                 </div>
             </div>
-            <div class="col-lg-5 offset-lg-1 d-none d-lg-block text-center">
-                <!-- Simple styling representation for premium looks -->
+            
+            <!-- Right Column: Featured Products Carousel -->
+            <div class="col-lg-5 offset-lg-1">
+                {% if trending %}
+                <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000">
+                    <div class="carousel-indicators" style="bottom: -40px;">
+                        {% for prod in trending[:3] %}
+                        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ loop.index0 }}" class="bg-dark {% if loop.first %}active{% endif %}" aria-current="{% if loop.first %}true{% endif %}" aria-label="Slide {{ loop.index }}"></button>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="carousel-inner rounded-4 shadow-lg border bg-white">
+                        {% for prod in trending[:3] %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %} p-4">
+                            <div class="text-center">
+                                <div class="mb-3" style="background-color: var(--bg-tertiary); height: 200px; border-radius: 12px; overflow: hidden; position: relative;">
+                                    <img src="{{ url_for('static', filename=prod.image_url) }}" class="w-100 h-100" style="object-fit: cover; transition: var(--transition-smooth);" alt="{{ prod.name }}">
+                                </div>
+                                <h5 class="fw-bold mb-1">
+                                    <a href="{{ url_for('user.product_detail', product_id=prod.id) }}" class="text-dark hover-text-primary">{{ prod.name }}</a>
+                                </h5>
+                                <p class="text-muted small mb-2"><i class="fas fa-store"></i> {{ prod.business_name }}</p>
+                                <div class="d-flex justify-content-between align-items-center mt-3 px-3">
+                                    <span class="fs-5 fw-bold text-indigo-600">${{ prod.price }}</span>
+                                    <span class="badge bg-indigo-100 text-indigo-800 rounded-pill px-3 py-1"><i class="fas fa-sparkles text-warning me-1"></i> Featured</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev" style="left: -50px;">
+                        <span class="carousel-control-prev-icon bg-dark rounded-circle" aria-hidden="true" style="padding: 15px;"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next" style="right: -50px;">
+                        <span class="carousel-control-next-icon bg-dark rounded-circle" aria-hidden="true" style="padding: 15px;"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+                {% else %}
+                <!-- Fallback representing mockup -->
                 <div class="glass-panel p-4 rounded-4 animated-float shadow-lg border-0 bg-white" style="max-width: 380px; margin: auto;">
                     <div style="background-color: var(--bg-tertiary); height: 220px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center;">
                         <i class="fa-solid fa-cube text-indigo-500 fs-1"></i>
@@ -31,34 +73,35 @@
                         <span class="badge bg-indigo-100 text-indigo-800 rounded-pill px-3 py-1"><i class="fas fa-sparkles text-warning me-1"></i> AI Recommended</span>
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
 <!-- Categories Grid -->
-<div class="container mb-5">
+<div class="container my-5 pt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold m-0">Browse Categories</h3>
         <a href="{{ url_for('user.browse') }}" class="text-decoration-none fw-semibold">View All <i class="fas fa-arrow-right small ms-1"></i></a>
     </div>
     <div class="row g-4">
-        {% for cat in categories %}
+        {% for cat in global_categories %}
         <div class="col-lg-2.4 col-md-4 col-6">
             <a href="{{ url_for('user.browse', category=cat.id) }}" class="card text-center p-4 border-0 shadow-sm rounded-4 h-100 bg-white hover-shadow" style="transition: var(--transition-smooth); display: block; color: inherit;">
                 <div class="mb-3 text-primary fs-2">
                     {% if cat.slug == 'electronics' %}
-                        <i class="fa-solid fa-laptop-code"></i>
+                        <i class="fa-solid fa-laptop-code text-indigo-500"></i>
                     {% elif cat.slug == 'fashion' %}
-                        <i class="fa-solid fa-shirt"></i>
+                        <i class="fa-solid fa-shirt text-indigo-500"></i>
                     {% elif cat.slug == 'home-kitchen' %}
-                        <i class="fa-solid fa-kitchen-set"></i>
+                        <i class="fa-solid fa-kitchen-set text-indigo-500"></i>
                     {% elif cat.slug == 'books-media' %}
-                        <i class="fa-solid fa-book-open"></i>
+                        <i class="fa-solid fa-book-open text-indigo-500"></i>
                     {% elif cat.slug == 'sports-outdoors' %}
-                        <i class="fa-solid fa-dumbbell"></i>
+                        <i class="fa-solid fa-dumbbell text-indigo-500"></i>
                     {% else %}
-                        <i class="fa-solid fa-tag"></i>
+                        <i class="fa-solid fa-tag text-indigo-500"></i>
                     {% endif %}
                 </div>
                 <h6 class="fw-bold mb-0">{{ cat.name }}</h6>
@@ -68,7 +111,7 @@
     </div>
 </div>
 
-<!-- AI Personalized Recommendations -->
+<!-- AI Personalized Recommendations Section -->
 {% if recommendations %}
 <div class="container mb-5">
     <div class="d-flex align-items-center mb-4 gap-2">
@@ -81,8 +124,7 @@
             <div class="product-card">
                 <span class="product-badge"><i class="fas fa-sparkles me-1"></i> Match</span>
                 <div class="product-img-wrapper">
-                    <!-- Standard fallback representation -->
-                    <img src="{{ url_for('static', filename=prod.image_url) if '/' in prod.image_url else url_for('static', filename='images/' ~ prod.image_url) }}" class="product-img" alt="{{ prod.name }}" onerror="this.src='https://placehold.co/400x400?text=Product+Image'">
+                    <img src="{{ url_for('static', filename=prod.image_url) }}" class="product-img" alt="{{ prod.name }}">
                 </div>
                 <div class="product-info">
                     <div class="product-category">{{ prod.category_name }}</div>
@@ -96,7 +138,6 @@
                                     <i class="far fa-heart"></i>
                                 </button>
                             </form>
-                            <!-- Compare trigger -->
                             <form action="{{ url_for('user.compare_add', product_id=prod.id) }}" method="POST" class="d-inline">
                                 <button type="submit" class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px; padding: 0;" title="Compare">
                                     <i class="fa-solid fa-shuffle"></i>
@@ -112,18 +153,21 @@
 </div>
 {% endif %}
 
-<!-- Trending / Popular Products -->
-<div class="container mb-5">
+<!-- Trending / Popular Products Section -->
+<div class="container mb-5 pb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold m-0">Trending Products</h3>
-        <span class="text-muted small">Based on platform sales volume</span>
+        <div>
+            <h3 class="fw-bold m-0">Trending Products</h3>
+            <p class="text-secondary small mb-0">Based on platform sales velocity and ratings</p>
+        </div>
+        <a href="{{ url_for('user.browse') }}" class="text-indigo-600 fw-semibold text-decoration-none">View All Products <i class="fas fa-arrow-right small ms-1"></i></a>
     </div>
     <div class="row g-4">
         {% for prod in trending %}
         <div class="col-lg-3 col-md-4 col-sm-6">
             <div class="product-card">
                 <div class="product-img-wrapper">
-                    <img src="{{ url_for('static', filename=prod.image_url) if '/' in prod.image_url else url_for('static', filename='images/' ~ prod.image_url) }}" class="product-img" alt="{{ prod.name }}" onerror="this.src='https://placehold.co/400x400?text=Product+Image'">
+                    <img src="{{ url_for('static', filename=prod.image_url) }}" class="product-img" alt="{{ prod.name }}">
                 </div>
                 <div class="product-info">
                     <h5 class="product-title"><a href="{{ url_for('user.product_detail', product_id=prod.id) }}">{{ prod.name }}</a></h5>

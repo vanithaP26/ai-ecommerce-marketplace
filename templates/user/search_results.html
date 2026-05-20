@@ -32,9 +32,9 @@
         {% for prod in products %}
         <div class="col-lg-3 col-md-4 col-sm-6">
             <div class="product-card">
-                <div class="product-img-wrapper">
-                    <img src="{{ url_for('static', filename=prod.image_url) if '/' in prod.image_url else url_for('static', filename='images/' ~ prod.image_url) }}" class="product-img" alt="{{ prod.name }}" onerror="this.src='https://placehold.co/400x400?text=Product+Image'">
-                </div>
+                    <div class="product-img-wrapper">
+                        <img src="{{ url_for('static', filename=prod.image_url) }}" class="product-img" alt="{{ prod.name }}">
+                    </div>
                 <div class="product-info">
                     <div class="product-category">{{ prod.category_name }}</div>
                     <h5 class="product-title"><a href="{{ url_for('user.product_detail', product_id=prod.id) }}">{{ prod.name }}</a></h5>

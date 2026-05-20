@@ -65,6 +65,8 @@ CREATE TABLE products (
     image_url VARCHAR(255) DEFAULT 'default_product.png',
     status VARCHAR(20) NOT NULL DEFAULT 'active', -- 'active', 'inactive', 'flagged'
     average_rating DECIMAL(3,2) DEFAULT 0.00,
+    is_featured INT DEFAULT 0,
+    discount_percentage INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (vendor_id) REFERENCES vendors(id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
@@ -188,8 +190,19 @@ CREATE TABLE recommendations (
 
 -- Seed initial data
 INSERT INTO categories (name, description, slug) VALUES 
-('Electronics', 'Smartphones, Laptops, Accessories, etc.', 'electronics'),
-('Fashion', 'Clothing, shoes, watches, and accessories', 'fashion'),
-('Home & Kitchen', 'Furniture, cookware, smart appliances', 'home-kitchen'),
-('Books & Media', 'Educational books, literature, video games', 'books-media'),
-('Sports & Outdoors', 'Fitness equipment, cycling, camping gear', 'sports-outdoors');
+('Electronics', 'Smart TVs, Bluetooth speakers, DSLR cameras, and smart devices.', 'electronics'),
+('Fashion', 'Designer casual shirts, hoodies, jeans, sarees, and traditional wear.', 'fashion'),
+('Home & Kitchen', 'Modern home accessories, dining tables, cookwares, and kitchen electronics.', 'home-kitchen'),
+('Books & Media', 'Data science books, business strategy guides, comics, and music albums.', 'books-media'),
+('Sports & Outdoors', 'Cricket bats, footballs, tents, helmets, and hiking accessories.', 'sports-outdoors'),
+('Smartphones', 'Latest 5G mobile phones, folding devices and flagships.', 'smartphones'),
+('Laptops', 'Powerful ultrabooks, gaming laptops and thin-and-light notebooks.', 'laptops'),
+('Footwear', 'Premium sneakers, formal leather shoes, sandals, and heels.', 'footwear'),
+('Beauty', 'Skin care serums, cosmetics, lotions, and perfumes.', 'beauty'),
+('Gaming', 'Consoles, mechanical keyboards, VR headsets, and gaming monitors.', 'gaming'),
+('Groceries', 'Premium basmati rice, mustard oil, organic grains, and coffee staples.', 'groceries'),
+('Furniture', 'Comfortable sofas, solid wood beds, study desks, and office chairs.', 'furniture'),
+('Fitness', 'Home gym dumbbells, natural yoga mats, treadmills, and high-grade protein.', 'fitness'),
+('Books', 'Bestselling self-help, MCA textbooks, and interview prep guides.', 'books'),
+('Accessories', 'Laptop bags, smart watch straps, charger hubs, and phone covers.', 'accessories'),
+('Appliances', 'Smart refrigerators, washing machines, ceiling fans, and geysers.', 'appliances');
